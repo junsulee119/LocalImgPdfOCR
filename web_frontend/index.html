@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OCR</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <div class="canvas" id="canvas">
+        <div class="frame"></div>
+        <div class="dragGlow" id="dragGlow"></div>
+
+        <div class="centerHint" id="centerHint">
+            <div>
+                <div class="title">이미지 &amp; PDF 파일 드래그</div>
+                <small>또는 캔버스 아무 곳이나 클릭해서 여러 파일 선택</small>
+            </div>
+        </div>
+
+        <div class="cardsWrap" id="cardsWrap" aria-label="jobs"></div>
+
+
+    </div>
+
+    <input id="canvasFileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none" />
+
+    <div class="modalOverlay" id="modalOverlay">
+        <div class="modal" role="dialog" aria-modal="true">
+            <div class="modalTop">
+                <div style="display:flex; align-items:center;">
+                    <div class="jobNamePill" id="jobNamePill" title="클릭해서 작업 이름 수정">작업이름</div>
+                    <span id="jobTitleTags" style="margin-left:10px;"></span>
+                </div>
+                <button class="modalClose" id="modalClose">X</button>
+            </div>
+
+            <div class="modalGrid">
+                <!-- Left: preview -->
+                <div class="panel no-pad">
+                    <div class="panelTitle">
+                        <span id="previewTitle"></span>
+                    </div>
+
+                    <div class="previewArea" id="previewArea">
+
+
+                        <div class="previewPlaceholder" id="previewContent">
+                            <div style="font-size:14px; font-weight:950;">미리보기</div>
+                            <div class="box">파일을 선택하면 여기 표시</div>
+                            <div style="font-size:12px; font-weight:900; color:var(--muted);">PDF는 placeholder로 표시</div>
+                        </div>
+
+                        <!-- PDF only -->
+                        <div class="pdfRangeBar" id="pdfRangeBar">
+                            <div class="chip" id="rangeChip" title="클릭해서 범위 변경">
+                                OCR 범위 <span class="value" id="rangeValue">all</span>
+                                <small>(기본 전부)</small>
+                            </div>
+                            <button class="btn small" id="rangeEditBtn">변경</button>
+                        </div>
+
+                        <div class="popover" id="rangePopover">
+                            <div style="margin-bottom: 8px; font-weight: 900; font-size: 12px; color: var(--muted);">
+                                📄 PDF 페이지 범위 지정
+                            </div>
+
+                            <div class="popRow">
+                                <input class="pagesInput" id="rangeInput" placeholder="예: 1-5,8,10-15 또는 all" />
+                                <button class="btn small" id="rangeApplyBtn">적용</button>
+                                <button class="btn small" id="rangeCancelBtn">닫기</button>
+                            </div>
+
+                            <!-- Syntax Guide -->
+                            <div
+                                style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; margin-top: 12px; font-size: 11px; line-height: 1.5;">
+                                <div style="font-weight: 900; margin-bottom: 6px; color: #66ccff;">📖 사용법</div>
+                                <div style="color: var(--muted); margin-bottom: 3px;">• <code
+                                        style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 3px;">all</code>
+                                    → 전체 페이지</div>
+                                <div style="color: var(--muted); margin-bottom: 3px;">• <code
+                                        style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 3px;">1</code>
+                                    → 1페이지만</div>
+                                <div style="color: var(--muted); margin-bottom: 3px;">• <code
+                                        style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 3px;">1-5</code>
+                                    → 1~5페이지</div>
+                                <div style="color: var(--muted);">• <code
+                                        style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 3px;">1-5,8,10-15</code>
+                                    → 조합</div>
+                            </div>
+
+                            <div
+                                style="margin-top:8px; font-size:11px; font-weight:900; color:var(--muted); line-height:1.35;">
+                                현재 미리보기 중인 PDF에만 적용됨.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom navigation (matching right section exactly) -->
+                    <div class="resultTools">
+                        <div class="resultNav">
+                            <button class="navMini" id="prevFile">←</button>
+                            <div class="resultIndex" id="previewIndexBottom">0 / 0</div>
+                            <button class="navMini" id="nextFile">→</button>
+                        </div>
+                        <div class="resultFileBtns" style="display:flex; gap:8px;">
+                            <button class="iconBtn" id="fileAddBtn" title="파일 추가">+</button>
+                            <button class="iconBtn" id="fileRemoveBtn" title="현재 파일 제거">-</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle -->
+                <div class="panel mid">
+                    <div class="togRow">
+                        <div class="togLabel">CUDA</div>
+                        <div class="toggle" id="toggleDevice"><i></i></div>
+                        <div class="togLabel">CPU</div>
+                    </div>
+                    <div class="midHint" id="deviceHint">CUDA 지원: ON (미지원이면 CPU로 고정)</div>
+
+                    <div class="togRow">
+                        <div class="togLabel">text</div>
+                        <div class="toggle" id="toggleMode"><i></i></div>
+                        <div class="togLabel">w/img</div>
+                    </div>
+                    <div class="midHint">text only / text+img</div>
+
+                    <button class="bigBtn" id="startBtn">OCR 시작(큐 추가)</button>
+
+                    <div class="modalProgressWrap">
+                        <div class="modalProgress"><i id="modalBar"></i></div>
+                        <div class="modalProgressLabel" id="modalLabel">0%</div>
+                    </div>
+
+                    <div class="midHint" id="statusHint">대기 중</div>
+
+                    <div style="height:12px"></div>
+                    <button class="btn" id="downloadBtn" disabled>다운로드(현재 파일)</button>
+                    <button class="btn" id="downloadAllBtn" disabled>전체 다운로드</button>
+
+                    <div style="margin-top: auto;"></div>
+                    <button class="bigDeleteBtn" id="deleteJobBtn">작업 삭제</button>
+                </div>
+
+                <!-- Right -->
+                <div class="panel no-pad">
+                    <div class="panelTitle">
+                        <span id="resultMeta"
+                            style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:400px;"></span>
+                        <span style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn small" id="applyEditBtn" disabled>수정 적용</button>
+                        </span>
+                    </div>
+
+                    <div class="resultBox">
+                        <textarea class="resultEditor" id="resultEditor" placeholder="OCR 완료 후 현재 파일의 .md가 표시됩니다."
+                            disabled></textarea>
+                        <div class="resultPreview" id="resultPreview" style="display:none; overflow:auto;">
+                        </div>
+                    </div>
+
+                    <div class="resultTools">
+                        <div class="resultNav">
+                            <button class="navMini" id="resPrev">←</button>
+                            <div class="resultIndex" id="resIndex">0 / 0</div>
+                            <button class="navMini" id="resNext">→</button>
+                            <button class="btn small" id="resetTextBtn" disabled>되돌리기</button>
+                            <button class="btn small" id="toggleMdViewBtn" disabled>👁 미리보기</button>
+                        </div>
+                        <!-- resultMeta moved to header -->
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input id="modalFileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none" />
+
+    <div class="toast" id="toast">
+        <b id="toastTitle">알림</b>
+        <p id="toastMsg">내용</p>
+    </div>
+
+    <div class="batchDock" id="batchDock">
+        <label class="batchToggle">
+            <input type="checkbox" id="batchModeToggle">
+            <span>다중 선택</span>
+        </label>
+        <div class="batchActions" id="batchActions">
+            <button class="batchBtn" id="batchRunBtn">OCR 실행</button>
+            <button class="batchBtn" id="batchDownloadBtn">다운로드</button>
+            <button class="batchBtn delete" id="batchDeleteBtn">작업 삭제</button>
+        </div>
+    </div>
+
+    <script src="api.js?v=2"></script>
+    <script src="markdownRenderer.js"></script>
+    <script src="app.js?v=2"></script>
+</body>
+
+</html>
