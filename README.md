@@ -2,6 +2,17 @@
 
 OCR application with CLI and GUI interfaces for extracting text and images from documents using LightOnOCR-2-1B models.
 
+[한국어 README (Korean README)](README_KOR.md)
+
+![Demo GIF](media/demo.gif)
+
+Text Only Mode
+![Text Only Mode](media/textonly.png)
+
+Text + Images Mode
+![Text + Images Mode](media/withimg.png)
+
+
 ## Features
 
 - **Dual Interface**: CLI for automation, GUI for interactive use
@@ -13,16 +24,6 @@ OCR application with CLI and GUI interfaces for extracting text and images from 
 - **Auto Model Download**: Automatically fetches models from HuggingFace on startup
 - **Organized Output**: All results saved in timestamped directories
 - **Pipeline Ready**: Modular design for integration into larger workflows
-
-## Demo
-
-![Demo GIF](media/demo.gif)
-
-### Text Only Mode Screenshot 
-![Text Only Mode](media/textonly.png)
-
-### Text + Images Mode Screenshot
-![Text + Images Mode](media/withimg.png)
 
 ## Quick Start
 
