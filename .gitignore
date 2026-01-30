@@ -33,9 +33,13 @@ venv.bak/
 
 # Project Specific
 models/
-output/
+output/**
+!output/
+!output/.gitkeep
 logs/
 *.log
+
+
 
 # IDE
 .idea/
