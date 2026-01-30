@@ -14,6 +14,16 @@ OCR application with CLI and GUI interfaces for extracting text and images from 
 - **Organized Output**: All results saved in timestamped directories
 - **Pipeline Ready**: Modular design for integration into larger workflows
 
+## Demo
+
+![Demo GIF](media/demo.gif)
+
+### Text Only Mode Screenshot 
+![Text Only Mode](media/textonly.png)
+
+### Text + Images Mode Screenshot
+![Text + Images Mode](media/withimg.png)
+
 ## Quick Start
 
 ### Windows
